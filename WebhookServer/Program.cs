@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using WebhookServer.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+builder.WebHost.UseKestrel(builder =>
+{
+    builder.Listen(IPAddress.Any, 5000);
+    builder.Listen(IPAddress.Any, 5001);
 });
 
 var app = builder.Build();
