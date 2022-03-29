@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using WebhookServer.DAL;
+using WebhookServer.Services.Interfaces;
+using WebhookServer.Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +15,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<DataContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
-builder.WebHost.UseKestrel(builder =>
+builder.Services.AddScoped<IUsersService, UsersService>();
+
+builder.WebHost.ConfigureKestrel(builder =>
 {
     builder.Listen(IPAddress.Any, 5000);
     builder.Listen(IPAddress.Any, 5001);
@@ -36,5 +41,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/users", async (IUsersService usersService) => await usersService.GetUsers());
 
 app.Run();
